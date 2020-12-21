@@ -501,6 +501,9 @@ class StatementClientV1
 
     private void httpDelete(URI uri)
     {
+        Thread.dumpStack();
+        System.err.println(String.format("Sending delete to %s", uri));
+
         Request request = prepareRequest(HttpUrl.get(uri))
                 .delete()
                 .build();
