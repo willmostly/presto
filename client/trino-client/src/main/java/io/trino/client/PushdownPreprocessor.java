@@ -17,6 +17,8 @@ package io.trino.client;
 import com.google.common.io.BaseEncoding;
 import org.gaul.modernizer_maven_annotations.SuppressModernizer;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,13 +47,22 @@ public class PushdownPreprocessor
             return query;
         }
         int lastGroupEnd = 0;
+        List<String> unencodedQueries = new ArrayList<>();
+        String queryText = "";
         while (hasMatch) {
             lastGroupEnd = encodeMatcher.end();
-            encodeMatcher.appendReplacement(sb,
-                    base32.encode((encodeMatcher.group(1).substring(startTag.length(), encodeMatcher.group(1).length() - endTag.length())).getBytes(UTF_8)));
+            queryText = encodeMatcher.group(1).substring(startTag.length(), encodeMatcher.group(1).length() - endTag.length());
+            encodeMatcher.appendReplacement(sb, base32.encode(queryText.getBytes(UTF_8)));
+            unencodedQueries.add(queryText);
             hasMatch = encodeMatcher.find();
         }
         sb.append(query, lastGroupEnd, query.length());
+        sb.append("\n/* Unencoded Queries");
+        for (String unencodeQuery : unencodedQueries) {
+            sb.append("\n==============================\n");
+            sb.append(unencodeQuery);
+        }
+        sb.append("\n==============================*/");
         return sb.toString();
     }
 
